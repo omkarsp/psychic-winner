@@ -394,6 +394,8 @@ public class UIManager : MonoBehaviour
             gameManager.OnTurnsChanged += UpdateTurnsUI;
             gameManager.OnGameWon += OnGameWon;
             gameManager.OnGameStarted += OnGameStarted;
+            gameManager.OnPreviewStarted += OnPreviewStarted;
+            gameManager.OnPreviewEnded += OnPreviewEnded;
         }
     }
 
@@ -406,6 +408,8 @@ public class UIManager : MonoBehaviour
             gameManager.OnTurnsChanged -= UpdateTurnsUI;
             gameManager.OnGameWon -= OnGameWon;
             gameManager.OnGameStarted -= OnGameStarted;
+            gameManager.OnPreviewStarted -= OnPreviewStarted;
+            gameManager.OnPreviewEnded -= OnPreviewEnded;
         }
     }
 
@@ -453,6 +457,28 @@ public class UIManager : MonoBehaviour
         UpdateTurnsUI(0);
         
         Debug.Log($"Game started UI updated - Difficulty: {selectedDifficulty}");
+    }
+
+    private void OnPreviewStarted()
+    {
+        // Optional: Show preview message
+        if (difficultyText != null)
+        {
+            difficultyText.text = $"Memorize the cards...";
+        }
+        
+        Debug.Log("Preview phase started - showing memorization message");
+    }
+
+    private void OnPreviewEnded()
+    {
+        // Restore normal difficulty display
+        if (difficultyText != null)
+        {
+            difficultyText.text = $"Difficulty: {selectedDifficulty}";
+        }
+        
+        Debug.Log("Preview phase ended - game is now active");
     }
 
     // Public methods to get current audio settings

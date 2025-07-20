@@ -14,6 +14,10 @@ public class MemoryCardGameManager : MonoBehaviour
     [SerializeField] private float mismatchDelay = 1.5f;
     [SerializeField] private int maxFlippedCards = 2;
     [SerializeField] private bool allowContinuousFlipping = true;
+    
+    [Header("Preview Settings")]
+    [SerializeField] private float previewDuration = 2f;
+    [SerializeField] private bool enablePreview = true;
 
     [Header("Current Grid Settings")]
     [SerializeField] private int currentRows = 3;
@@ -30,6 +34,10 @@ public class MemoryCardGameManager : MonoBehaviour
     private Queue<Card> cardClickQueue = new Queue<Card>();
     private bool isProcessingMatch = false;
     private Coroutine matchProcessingCoroutine;
+    
+    // Preview phase
+    private bool isInPreviewPhase = false;
+    private Coroutine previewCoroutine;
 
     // Events
     public System.Action<int> OnScoreChanged;
@@ -37,6 +45,8 @@ public class MemoryCardGameManager : MonoBehaviour
     public System.Action<int, int> OnPairsChanged; // matched, total
     public System.Action OnGameWon;
     public System.Action OnGameStarted;
+    public System.Action OnPreviewStarted;
+    public System.Action OnPreviewEnded;
 
     private void Awake()
     {
@@ -93,19 +103,88 @@ public class MemoryCardGameManager : MonoBehaviour
 
         gridManager.GenerateGrid(rows, columns);
 
-        // Set game as active
-        IsGameActive = true;
-
         // Notify listeners
         OnGameStarted?.Invoke();
         UpdateUI();
 
+        // Start preview phase if enabled
+        if (enablePreview)
+        {
+            StartPreviewPhase();
+        }
+        else
+        {
+            // Set game as active immediately if no preview
+            IsGameActive = true;
+        }
+
         Debug.Log($"New game started: {gridManager.TotalPairs} pairs to match");
+    }
+
+    private void StartPreviewPhase()
+    {
+        Debug.Log("Starting preview phase - revealing all cards");
+        
+        isInPreviewPhase = true;
+        IsGameActive = false; // Disable interaction during preview
+        
+        // Reveal all cards
+        var allCards = gridManager.GetAllCards();
+        foreach (Card card in allCards)
+        {
+            if (card != null)
+            {
+                card.FlipToFront(immediate: true);
+                card.SetInteractable(false); // Disable clicking during preview
+            }
+        }
+        
+        OnPreviewStarted?.Invoke();
+        
+        // Start preview timer
+        if (previewCoroutine != null)
+        {
+            StopCoroutine(previewCoroutine);
+        }
+        previewCoroutine = StartCoroutine(PreviewPhaseCoroutine());
+    }
+
+    private IEnumerator PreviewPhaseCoroutine()
+    {
+        // Wait for preview duration
+        yield return new WaitForSeconds(previewDuration);
+        
+        EndPreviewPhase();
+    }
+
+    private void EndPreviewPhase()
+    {
+        Debug.Log("Preview phase ended - hiding all cards");
+        
+        isInPreviewPhase = false;
+        
+        // Hide all cards
+        var allCards = gridManager.GetAllCards();
+        foreach (Card card in allCards)
+        {
+            if (card != null)
+            {
+                card.FlipToBack(immediate: true);
+                card.SetInteractable(true); // Re-enable clicking after preview
+            }
+        }
+        
+        // Now enable game interaction
+        IsGameActive = true;
+        
+        OnPreviewEnded?.Invoke();
+        
+        Debug.Log("Game is now active - players can start matching!");
     }
 
     private void HandleCardClick(Card clickedCard)
     {
-        if (!IsGameActive || clickedCard == null)
+        if (!IsGameActive || clickedCard == null || isInPreviewPhase)
             return;
 
         // Add to queue for processing
@@ -350,6 +429,7 @@ public class MemoryCardGameManager : MonoBehaviour
         CurrentTurns = 0;
         MatchedPairs = 0;
         IsGameActive = false;
+        isInPreviewPhase = false;
 
         // Reset score manager
         if (scoreManager != null)
@@ -361,10 +441,17 @@ public class MemoryCardGameManager : MonoBehaviour
         cardClickQueue.Clear();
         isProcessingMatch = false;
 
+        // Stop any running coroutines
         if (matchProcessingCoroutine != null)
         {
             StopCoroutine(matchProcessingCoroutine);
             matchProcessingCoroutine = null;
+        }
+        
+        if (previewCoroutine != null)
+        {
+            StopCoroutine(previewCoroutine);
+            previewCoroutine = null;
         }
     }
 
@@ -501,6 +588,22 @@ public class MemoryCardGameManager : MonoBehaviour
     public bool HasActiveGame()
     {
         return IsGameActive;
+    }
+
+    public bool IsInPreviewPhase()
+    {
+        return isInPreviewPhase;
+    }
+
+    public void SetPreviewSettings(bool enabled, float duration)
+    {
+        enablePreview = enabled;
+        previewDuration = Mathf.Max(0.5f, duration);
+    }
+
+    public float GetPreviewDuration()
+    {
+        return previewDuration;
     }
 
     private void OnDestroy()
