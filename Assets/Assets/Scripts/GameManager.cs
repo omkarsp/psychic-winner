@@ -6,19 +6,24 @@ public enum GameState
 {
     MainMenu,
     Gameplay,
-    GameOver
+    GameOver,
+    DifficultyComplete,
+    GamePaused
 }
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     [SerializeField] private GameState currentGameState;
+    [SerializeField] private MemoryCardGameManager memoryCardGameManager;
 
     public GameState CurrentGameState
     {
         get { return currentGameState; }
         set { currentGameState = value; }
     }
+
+    public MemoryCardGameManager MemoryGameManager => memoryCardGameManager;
 
     private void Awake()
     {
@@ -38,6 +43,16 @@ public class GameManager : MonoBehaviour
         ChangeGameState(GameState.Gameplay);
     }
 
+    public void StartGameWithDifficulty(Difficulty difficulty)
+    {
+        if (memoryCardGameManager != null)
+        {
+            var gridSize = GetGridSizeForDifficulty(difficulty);
+            memoryCardGameManager.StartNewGame(gridSize.rows, gridSize.columns);
+        }
+        ChangeGameState(GameState.Gameplay);
+    }
+
     public void ReturnToMainMenu()
     {
         ChangeGameState(GameState.MainMenu);
@@ -48,8 +63,42 @@ public class GameManager : MonoBehaviour
         ChangeGameState(GameState.GameOver);
     }
 
+    public void CompleteDifficulty()
+    {
+        ChangeGameState(GameState.DifficultyComplete);
+    }
+
+    public void PauseGame()
+    {
+        ChangeGameState(GameState.GamePaused);
+    }
+
+    public void ResumeGame()
+    {
+        ChangeGameState(GameState.Gameplay);
+    }
+
+    private (int rows, int columns) GetGridSizeForDifficulty(Difficulty difficulty)
+    {
+        return difficulty switch
+        {
+            Difficulty.VeryEasy => (3, 4),  // 12 cards, 6 pairs
+            Difficulty.Easy => (4, 4),      // 16 cards, 8 pairs
+            Difficulty.Medium => (4, 5),    // 20 cards, 10 pairs
+            Difficulty.Hard => (5, 6),      // 30 cards, 15 pairs
+            Difficulty.VeryHard => (6, 6),  // 36 cards, 18 pairs
+            _ => (3, 4)
+        };
+    }
+
     private void Start()
     {
+        // Find MemoryCardGameManager if not assigned
+        if (memoryCardGameManager == null)
+        {
+            memoryCardGameManager = FindObjectOfType<MemoryCardGameManager>();
+        }
+
         // Start with the main menu
         ChangeGameState(GameState.MainMenu);
     }
@@ -69,14 +118,29 @@ public class GameManager : MonoBehaviour
                 if (UIManager.Instance != null)
                 {
                     UIManager.Instance.HideMainMenu();
+                    UIManager.Instance.ShowGameplayUI();
                 }
-                //TODO: Implement Gameplay
                 break;
             case GameState.GameOver:
-                //TODO: Implement Game Over
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.ShowGameOverUI();
+                }
+                break;
+            case GameState.DifficultyComplete:
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.ShowDifficultyCompleteUI();
+                }
+                break;
+            case GameState.GamePaused:
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.ShowPauseUI();
+                }
                 break;
             default:
-                //TODO: Implement Default
+                Debug.LogWarning($"Unhandled game state: {newState}");
                 break;
         }
     }
