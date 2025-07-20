@@ -23,6 +23,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject gameplayPanel;
     [SerializeField] private Button homeButton;
     [SerializeField] private Button restartButton;
+    [SerializeField] private Button settingsButtonHUD;
     [SerializeField] private TMPro.TextMeshProUGUI difficultyText;
     [SerializeField] private TMPro.TextMeshProUGUI scoreText;
     [SerializeField] private TMPro.TextMeshProUGUI turnsText;
@@ -88,6 +89,7 @@ public class UIManager : MonoBehaviour
         // Gameplay UI listeners
         if (homeButton != null) homeButton.onClick.AddListener(OnHomeButtonClicked);
         if (restartButton != null) restartButton.onClick.AddListener(OnRestartButtonClicked);
+        if (settingsButtonHUD != null) settingsButtonHUD.onClick.AddListener(OnSettingsButtonClicked);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinueButtonClicked);
         if (menuButton != null) menuButton.onClick.AddListener(OnHomeButtonClicked);
         
