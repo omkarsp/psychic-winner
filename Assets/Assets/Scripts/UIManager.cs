@@ -214,13 +214,21 @@ public class UIManager : MonoBehaviour
     
     private void InitializeAudioSettings()
     {
-        // Load saved settings (you can implement PlayerPrefs later)
+        // Load saved settings from PlayerPrefs
+        musicEnabled = PlayerPrefs.GetInt("MusicEnabled", 1) == 1;
+        musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.8f);
+        effectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", 1) == 1;
+        effectsVolume = PlayerPrefs.GetFloat("EffectsVolume", 0.8f);
+        
+        // Update UI elements to reflect loaded settings
         musicToggle.isOn = musicEnabled;
         musicVolumeSlider.value = musicVolume;
         effectsToggle.isOn = effectsEnabled;
         effectsVolumeSlider.value = effectsVolume;
         
-        // Apply initial settings
+        Debug.Log($"Audio settings loaded: Music={musicEnabled}({musicVolume:F2}), Effects={effectsEnabled}({effectsVolume:F2})");
+        
+        // Apply initial settings to AudioManager
         UpdateMusicSettings();
         UpdateEffectsSettings();
     }
@@ -252,10 +260,20 @@ public class UIManager : MonoBehaviour
     private void UpdateMusicSettings()
     {
         float finalVolume = musicEnabled ? musicVolume : 0f;
-        // Apply to audio system - you can implement AudioManager later
-        Debug.Log($"Music: Enabled={musicEnabled}, Volume={finalVolume:F2}");
         
-        // Save settings (implement PlayerPrefs later if needed)
+        // Apply to AudioManager if available
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetMusicEnabled(musicEnabled);
+            AudioManager.Instance.SetMusicVolume(musicVolume);
+            Debug.Log($"Music settings applied to AudioManager: Enabled={musicEnabled}, Volume={finalVolume:F2}");
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager.Instance is null - music settings not applied");
+        }
+        
+        // Save settings to PlayerPrefs
         PlayerPrefs.SetInt("MusicEnabled", musicEnabled ? 1 : 0);
         PlayerPrefs.SetFloat("MusicVolume", musicVolume);
     }
@@ -263,10 +281,20 @@ public class UIManager : MonoBehaviour
     private void UpdateEffectsSettings()
     {
         float finalVolume = effectsEnabled ? effectsVolume : 0f;
-        // Apply to audio system - you can implement AudioManager later
-        Debug.Log($"Effects: Enabled={effectsEnabled}, Volume={finalVolume:F2}");
         
-        // Save settings (implement PlayerPrefs later if needed)
+        // Apply to AudioManager if available
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetEffectsEnabled(effectsEnabled);
+            AudioManager.Instance.SetEffectsVolume(effectsVolume);
+            Debug.Log($"Effects settings applied to AudioManager: Enabled={effectsEnabled}, Volume={finalVolume:F2}");
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager.Instance is null - effects settings not applied");
+        }
+        
+        // Save settings to PlayerPrefs
         PlayerPrefs.SetInt("EffectsEnabled", effectsEnabled ? 1 : 0);
         PlayerPrefs.SetFloat("EffectsVolume", effectsVolume);
     }

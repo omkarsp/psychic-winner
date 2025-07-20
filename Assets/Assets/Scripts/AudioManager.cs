@@ -95,7 +95,15 @@ public class AudioManager : MonoBehaviour
 
     private void LoadAudioSettings()
     {
-        // Try to get settings from UIManager
+        // First load from PlayerPrefs (fallback values)
+        effectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", 1) == 1;
+        effectsVolume = PlayerPrefs.GetFloat("EffectsVolume", 0.8f);
+        musicEnabled = PlayerPrefs.GetInt("MusicEnabled", 1) == 1;
+        musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.6f);
+        
+        Debug.Log($"Audio settings loaded from PlayerPrefs: Effects={effectsEnabled}({effectsVolume:F2}), Music={musicEnabled}({musicVolume:F2})");
+        
+        // Then try to get current settings from UIManager if available
         UIManager uiManager = FindObjectOfType<UIManager>();
         if (uiManager != null)
         {
@@ -104,9 +112,10 @@ public class AudioManager : MonoBehaviour
             musicEnabled = uiManager.IsMusicEnabled();
             musicVolume = uiManager.GetMusicVolume();
             
-            UpdateAudioSettings();
-            Debug.Log("Audio settings loaded from UIManager");
+            Debug.Log($"Audio settings updated from UIManager: Effects={effectsEnabled}({effectsVolume:F2}), Music={musicEnabled}({musicVolume:F2})");
         }
+        
+        UpdateAudioSettings();
     }
 
     #region Required Sound Effects
@@ -343,12 +352,19 @@ public class AudioManager : MonoBehaviour
         Debug.Log($"Master Volume: {masterVolume}");
         Debug.Log($"Active Audio Sources: {activeAudioSources.Count}");
         Debug.Log($"Pooled Audio Sources: {audioSourcePool.Count}");
+        Debug.Log($"Main Effects Source Volume: {effectsSource?.volume ?? 0f}");
         
         // Check for missing clips
         if (cardFlipSound == null) Debug.LogWarning("Card flip sound not assigned!");
         if (matchSound == null) Debug.LogWarning("Match sound not assigned!");
         if (mismatchSound == null) Debug.LogWarning("Mismatch sound not assigned!");
         if (gameOverSound == null) Debug.LogWarning("Game over sound not assigned!");
+    }
+    
+    public void TestEffectsVolume()
+    {
+        Debug.Log($"Testing effects at volume {effectsVolume * masterVolume:F2}");
+        PlayCardFlip();
     }
 
     #endregion
