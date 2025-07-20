@@ -118,6 +118,7 @@ public class UIManager : MonoBehaviour
     {
         mainMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
+        levelCompletePanel?.SetActive(false);
     }
     
     public void HideMainMenu()
@@ -138,6 +139,24 @@ public class UIManager : MonoBehaviour
         
         // Subscribe to game events
         SubscribeToGameEvents();
+        
+        // Immediately update UI with current values
+        InitializeGameplayUI();
+    }
+    
+    private void InitializeGameplayUI()
+    {
+        // Set initial difficulty display
+        if (difficultyText != null)
+        {
+            difficultyText.text = $"Difficulty: {selectedDifficulty}";
+        }
+        
+        // Set initial score and turns (always show 0 at start)
+        UpdateScoreUI(0);
+        UpdateTurnsUI(0);
+        
+        Debug.Log($"Gameplay UI initialized - Difficulty: {selectedDifficulty}");
     }
 
     public void ShowDifficultyCompleteUI()
@@ -368,6 +387,11 @@ public class UIManager : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = $"Score: {score}";
+            Debug.Log($"Score UI updated: {score}");
+        }
+        else
+        {
+            Debug.LogWarning("Score text component is null!");
         }
     }
 
@@ -376,6 +400,11 @@ public class UIManager : MonoBehaviour
         if (turnsText != null)
         {
             turnsText.text = $"Turns: {turns}";
+            Debug.Log($"Turns UI updated: {turns}");
+        }
+        else
+        {
+            Debug.LogWarning("Turns text component is null!");
         }
     }
 
@@ -394,6 +423,8 @@ public class UIManager : MonoBehaviour
         // Reset UI values
         UpdateScoreUI(0);
         UpdateTurnsUI(0);
+        
+        Debug.Log($"Game started UI updated - Difficulty: {selectedDifficulty}");
     }
 
     // Public methods to get current audio settings
